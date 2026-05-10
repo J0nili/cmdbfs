@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════
-   DESIGN TOKENS — basado en cmdb_flujograma
+   Bonnie
 ══════════════════════════════════════════ */
 :root {
   --ink:    #0a0a0a;
@@ -761,6 +761,64 @@ td:last-child { border-right: none; }
 .c6 { color:#e11d48; background:#e11d48 }
 .c7 { color:#64748b; background:#64748b }
 
+
+
+
+/* ── TABLE SORT ── */
+thead th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+thead th.sortable:hover { background: #2a2a2a; }
+thead th.sort-asc  .sort-icon::after { content: ' ↑'; opacity: 1; }
+thead th.sort-desc .sort-icon::after { content: ' ↓'; opacity: 1; }
+thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: .7em; }
+.sort-icon { display: inline; }
+
+
+/* ── SEARCHABLE SELECT ── */
+.ss-wrap { position: relative; width: 100%; }
+.ss-input {
+  width: 100%; border: 1.5px solid var(--line); border-radius: var(--r);
+  padding: .44rem .6rem; padding-right: 1.8rem;
+  font-family: var(--sans); font-size: .82rem;
+  background: var(--paper); color: var(--ink);
+  outline: none; cursor: pointer; transition: var(--ease);
+  -webkit-appearance: none; caret-color: transparent;
+}
+.ss-input:not([disabled]):hover { border-color: var(--ink-3); }
+.ss-wrap.open .ss-input { border-color: var(--ink-3); box-shadow: 0 0 0 2px rgba(10,10,10,.08); }
+.ss-input[disabled] { opacity: .4; cursor: not-allowed; }
+.ss-input.has-value { font-weight: 600; color: var(--ink); }
+.ss-arrow {
+  position: absolute; right: .6rem; top: 50%; transform: translateY(-50%);
+  color: var(--ink-4); font-size: .75rem; pointer-events: none;
+  transition: transform var(--ease);
+}
+.ss-wrap.open .ss-arrow { transform: translateY(-50%) rotate(180deg); }
+.ss-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 600;
+  background: var(--paper); border: 1.5px solid var(--ink-3);
+  border-radius: var(--r); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  flex-direction: column; max-height: 260px; overflow: hidden;
+}
+.ss-wrap.open .ss-dropdown { display: flex; }
+.ss-search {
+  padding: .45rem .6rem; border-bottom: 1px solid var(--line);
+  font-family: var(--sans); font-size: .8rem;
+  background: var(--paper); color: var(--ink);
+  border: none; border-bottom: 1px solid var(--line);
+  outline: none; flex-shrink: 0;
+}
+.ss-list { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+.ss-opt {
+  padding: .45rem .7rem; font-size: .8rem; color: var(--ink-2);
+  cursor: pointer; transition: background var(--ease);
+}
+.ss-opt:hover, .ss-opt.ss-focused { background: var(--paper-2); }
+.ss-opt.ss-selected { background: var(--ink); color: var(--paper); font-weight: 600; }
+.ss-opt.ss-hidden { display: none; }
+.ss-empty { padding: .45rem .7rem; font-size: .78rem; color: var(--ink-4); font-style: italic; }
+.fg.err .ss-input { border-color: var(--err) !important; background: var(--err-bg) !important; }
+
 </style>
 <body>
 
@@ -820,15 +878,30 @@ td:last-child { border-right: none; }
       <table>
         <thead><tr>
           <th class="td-n">#</th>
-          <th>Ticket</th><th>Serial</th><th>Hostname</th><th>Placa</th>
-          <th class="gs">IP</th>
-          <th>Tipo</th><th>Marca</th><th>Modelo</th>
-          <th class="gs">S.O</th>
-          <th>Estado</th><th>Empresa</th><th>Usuario</th><th>Red</th>
-          <th class="gs">Ubicación</th>
-          <th>CMDB</th><th>Snow</th><th>Symt</th><th>Disc</th><th>CWS</th>
-          <th>BL·C</th><th class="gs">BL·D</th>
-          <th>Fecha</th><th>Proyecto</th><th></th>
+          <th class="sortable" onclick="sortBy('ticket')" id="sh-ticket">Ticket<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('serial')" id="sh-serial">Serial<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('hostname')" id="sh-hostname">Hostname<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('placa')" id="sh-placa">Placa<span class="sort-icon"></span></th>
+          <th class="sortable gs" onclick="sortBy('ip')" id="sh-ip">IP<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('tipo')" id="sh-tipo">Tipo<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('marca')" id="sh-marca">Marca<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('modelo')" id="sh-modelo">Modelo<span class="sort-icon"></span></th>
+          <th class="sortable gs" onclick="sortBy('so')" id="sh-so">S.O<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('estado')" id="sh-estado">Estado<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('empresa')" id="sh-empresa">Empresa<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('user')" id="sh-user">Usuario<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('userid')" id="sh-userid">Red<span class="sort-icon"></span></th>
+          <th class="sortable gs" onclick="sortBy('ubicacion')" id="sh-ubicacion">Ubicación<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('cmdb')" id="sh-cmdb">CMDB<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('snow')" id="sh-snow">Snow<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('symantec')" id="sh-symt">Symt<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('discovery')" id="sh-disc">Disc<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('crowdstrike')" id="sh-cws">CWS<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('blc')" id="sh-blc">BL·C<span class="sort-icon"></span></th>
+          <th class="sortable gs" onclick="sortBy('bld')" id="sh-bld">BL·D<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('fecha')" id="sh-fecha">Fecha<span class="sort-icon"></span></th>
+          <th class="sortable" onclick="sortBy('proyecto')" id="sh-proyecto">Proyecto<span class="sort-icon"></span></th>
+          <th></th>
         </tr></thead>
         <tbody id="tBody"></tbody>
       </table>
@@ -921,9 +994,19 @@ td:last-child { border-right: none; }
       </div>
       <div class="fg dpf" id="fg-modelo">
         <label>Modelo <span class="rs">*</span></label>
-        <select id="f-modelo" onchange="ce('modelo')" disabled>
-          <option value="">— Seleccionar marca —</option>
-        </select>
+        <div class="ss-wrap" id="ss-modelo-wrap">
+          <input class="ss-input" id="ss-modelo-display" type="text"
+            placeholder="— Seleccionar marca primero —"
+            onclick="ssToggle('modelo')" readonly autocomplete="off" disabled>
+          <span class="ss-arrow">▾</span>
+          <input type="hidden" id="f-modelo">
+          <div class="ss-dropdown" id="ss-modelo-drop">
+            <input class="ss-search" id="ss-modelo-search" type="text"
+              placeholder="🔍 Buscar modelo…" oninput="ssFilter('modelo')"
+              autocomplete="off" onclick="event.stopPropagation()">
+            <div class="ss-list" id="ss-modelo-list"></div>
+          </div>
+        </div>
         <span class="err-msg">Requerido</span>
       </div>
       <div class="fg dpf" id="fg-so">
@@ -942,8 +1025,8 @@ td:last-child { border-right: none; }
         <label>Estado <span class="rs">*</span></label>
         <select id="f-estado" onchange="ce('estado');onEstadoChange()">
           <option value="">— Seleccionar —</option>
-          <option>Instalado</option><option>Bodega</option>
-          <option>Retirado</option><option>Robo</option><option>Other</option>
+          <option>Installed</option><option>In Stock</option>
+          <option>Retired</option><option>Stolen</option><option>Other</option>
         </select>
         <span class="err-msg">Requerido</span>
       </div>
@@ -969,7 +1052,6 @@ td:last-child { border-right: none; }
           <option>FUNDACION PARA LA PROMOCION POPULAR</option>
           <option>INVERSORA FUNDACION GRUPO SOCIAL S.A.S</option>
           <option>PROJUVENTUD</option>
-            <option>Test</option>
           <option>PROMOTORA INVERSIONES Y COBRANZAS S.A.S</option>
           <option>Other</option>
         </select>
@@ -983,7 +1065,11 @@ td:last-child { border-right: none; }
     <div class="dps">Usuario asignado</div>
     <div class="dpg">
       <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="Nombre completo" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
-      <div class="fg" id="fg-userid"><label>Usuario de red <span class="rs">*</span></label><input id="f-userid" type="text" placeholder="USER ID" oninput="ce('userid');this.value=this.value.toUpperCase()"><span class="err-msg">Requerido</span></div>
+      <div class="fg" id="fg-userid">
+        <label>UserID <span class="rs">*</span><span style="font-family:var(--mono);font-size:.56rem;color:var(--ink-5);font-weight:400;margin-left:.3rem;letter-spacing:0">Usuario de red</span></label>
+        <input id="f-userid" type="text" placeholder="NOMBRE.APELLIDO" oninput="ce('userid');this.value=this.value.toUpperCase()">
+        <span class="err-msg">Requerido</span>
+      </div>
       <div class="fg dpf" id="fg-fecha"><label>Fecha cargue <span class="rs">*</span></label><input id="f-fecha" type="date" onchange="ce('fecha')"><span class="err-msg">Requerido</span></div>
     </div>
 
@@ -1148,6 +1234,9 @@ td:last-child { border-right: none; }
 <div class="toast" id="toast"></div>
 
 <script>
+/* ════
+/* ════
+/* ════
 /* ══════════════════════════════════════
    CASCADE DATA: Tipo > Marca > Modelo
 ══════════════════════════════════════ */
@@ -1186,7 +1275,7 @@ const CASCADE = {
       'Hp Prodesk 4 Mini G1I','Hp Prodesk 4 Sff G1I Desktop Ai Pc',
       'Hp Prodesk 400 G6 Small SFF Desktop','Hp Prodesk 400 G7 Small Form Factor Pc',
       'Hp Prodesk 400 G9 SFF Desktop','Hp Prodesk 400 G9 Small Form Factor Pc',
-      'Hp Prodesk 600 G1 Desktop','Hp Prodesk 600 G1 Desktop Mini Pc','Hp Z230 Workstation',
+      'Hp Prodesk 600 G1 Desktop','Hp Prodesk 600 G1 Desktop Mini Pc','Hp Z230 Workstation'
     ],
     Lenovo: ['Thinkcentre M73']
   },
@@ -1253,14 +1342,19 @@ function onTipoChange(){
   ce('tipo');
   const tipo = document.getElementById('f-tipo').value;
   const marcaSel = document.getElementById('f-marca');
-  const modeloSel = document.getElementById('f-modelo');
   const soSel = document.getElementById('f-so');
 
   marcaSel.innerHTML = '<option value="">— Seleccionar —</option>';
-  modeloSel.innerHTML = '<option value="">— Seleccionar marca —</option>';
-  soSel.innerHTML = '<option value="">— Seleccionar marca primero —</option>';
   marcaSel.disabled = !tipo;
-  modeloSel.disabled = true;
+
+  // Reset searchable modelo dropdown
+  ssClear('modelo');
+  ssEnable('modelo', false);
+  const mdDisp = document.getElementById('ss-modelo-display');
+  if(mdDisp) mdDisp.placeholder = '— Seleccionar marca primero —';
+
+  // Reset SO
+  soSel.innerHTML = '<option value="">— Seleccionar marca primero —</option>';
 
   if(tipo && CASCADE[tipo]){
     Object.keys(CASCADE[tipo]).sort().forEach(m=>{
@@ -1278,17 +1372,15 @@ function onMarcaChange(){
   ce('marca');
   const tipo  = document.getElementById('f-tipo').value;
   const marca = document.getElementById('f-marca').value;
-  const modeloSel = document.getElementById('f-modelo');
   const soSel = document.getElementById('f-so');
 
   /* ── Modelo cascade ── */
-  modeloSel.innerHTML = '<option value="">— Seleccionar —</option>';
-  modeloSel.disabled = !marca;
-  if(tipo && marca && CASCADE[tipo]?.[marca]){
-    CASCADE[tipo][marca].sort().forEach(m=>{
-      modeloSel.innerHTML += `<option>${m}</option>`;
-    });
-  }
+  const modeloOptions = (tipo && marca && CASCADE[tipo]?.[marca]) ? [...CASCADE[tipo][marca]].sort() : [];
+  ssClear('modelo');                                         // 1. limpiar primero
+  ssInit('modelo', modeloOptions);                           // 2. cargar opciones
+  ssEnable('modelo', !!(marca && modeloOptions.length));     // 3. habilitar si hay opciones
+  const disp = document.getElementById('ss-modelo-display');
+  if(disp) disp.placeholder = marca && modeloOptions.length ? '— Seleccionar modelo —' : '— Seleccionar marca primero —';
 
   /* ── S.O filter ── */
   const isApple = marca === 'Apple';
@@ -1321,7 +1413,7 @@ function onMarcaChange(){
 }
 
 /* ── TOOL FIELDS ── */
-const TOOL_FIELDS = ['cmdb','snow','symantec','discovery','crowdstrike','blc','bld'];
+const TOOL_FIELDS = ['snow','symantec','discovery','crowdstrike','blc','bld'];
 
 function onEstadoChange(){
   const val=document.getElementById('f-estado').value;
@@ -1337,15 +1429,7 @@ function onEstadoChange(){
     if(fg) fg.style.opacity=enabled?'1':'0.42';
   });
 
-  // CMDB Si/No toggle
-  const cmdbFg=document.getElementById('fg-cmdb');
-  const cmdbSi=document.getElementById('cmdb-si');
-  const cmdbNo=document.getElementById('cmdb-no');
-  const cmdbHid=document.getElementById('f-cmdb');
-  if(cmdbSi){ cmdbSi.style.pointerEvents=enabled?'':'none'; cmdbSi.style.opacity=enabled?'1':'0.42'; }
-  if(cmdbNo){ cmdbNo.style.pointerEvents=enabled?'':'none'; cmdbNo.style.opacity=enabled?'1':'0.42'; }
-  if(cmdbFg) cmdbFg.style.opacity=enabled?'1':'0.42';
-  if(!enabled && cmdbHid){ cmdbHid.value=''; resetSino('cmdb'); }
+  // CMDB: siempre activo y obligatorio (no se deshabilita)
 
   // Reset BL code wraps
   if(!enabled){
@@ -1448,15 +1532,15 @@ function resetSino(k){ document.getElementById('f-'+k).value=''; document.getEle
 /* ── PROGRESS ── */
 /* Base required fields — always required */
 const REQ_BASE=['ticket','serial','placa','hostname','ip','tipo','marca','modelo','so',
-  'estado','empresa','ubicacion','proyecto','user','userid','fecha'];
+  'estado','empresa','ubicacion','proyecto','user','userid','fecha','cmdb'];
 /* Tool fields — required only when Estado=Installed */
-const REQ_TOOLS=['cmdb','snow','symantec','discovery','crowdstrike'];
+const REQ_TOOLS=['snow','symantec','discovery','crowdstrike'];
 /* BL fields — required only when Installed + Windows 10/11 + not Apple */
 const REQ_BL=['blc','bld'];
 
 const LABELS={ticket:'Ticket',serial:'Serial',placa:'Placa',hostname:'Hostname',ip:'IP',tipo:'Tipo',
   marca:'Marca',modelo:'Modelo',so:'S.O',estado:'Estado',empresa:'Empresa',
-  ubicacion:'Ubicación',proyecto:'Proyecto',user:'Usuario',userid:'Usuario de red',
+  ubicacion:'Ubicación',proyecto:'Proyecto',user:'Usuario',userid:'UserID',
   fecha:'Fecha cargue',cmdb:'CMDB',snow:'Snow',symantec:'Symantec',
   discovery:'Discovery',crowdstrike:'Crowdstrike',blc:'Bitlocker C',bld:'Bitlocker D'};
 
@@ -1542,8 +1626,6 @@ function saveRec(){
   if(editId){const i=DB.findIndex(x=>x.id===editId);if(i>=0)DB[i]=r;}
   else DB.unshift(r);
   saveDB();render();if(document.getElementById('pane-dash').classList.contains('on'))renderDash();
-  // auto-refresh dashboard if visible
-  if(document.getElementById('pane-dash').classList.contains('on')){renderDash();}
   toast(editId?'✓ Registro actualizado':'✓ Registro guardado');
   editId=null;clearForm();
   document.getElementById('dpTtl').textContent='Nuevo Registro';
@@ -1553,7 +1635,6 @@ function saveRec(){
 function delRec(id){
   if(!confirm('¿Eliminar este registro?')) return;
   DB=DB.filter(r=>r.id!==id);saveDB();render();if(document.getElementById('pane-dash').classList.contains('on'))renderDash();
-  if(document.getElementById('pane-dash').classList.contains('on')){renderDash();}
   toast('Registro eliminado');
 }
 
@@ -1570,8 +1651,8 @@ function clearForm(){
   document.getElementById('f-tipo').value='';
   document.getElementById('f-marca').innerHTML='<option value="">— Seleccionar tipo —</option>';
   document.getElementById('f-marca').disabled=true;
-  document.getElementById('f-modelo').innerHTML='<option value="">— Seleccionar marca —</option>';
-  document.getElementById('f-modelo').disabled=true;
+  ssClear('modelo'); ssEnable('modelo', false);
+  const _md=document.getElementById('ss-modelo-display'); if(_md) _md.placeholder='— Seleccionar marca primero —';
   SINO_KEYS.forEach(resetSino);
   document.querySelectorAll('.fg.err').forEach(e=>e.classList.remove('err'));
   document.getElementById('vsum').classList.remove('show');
@@ -1593,7 +1674,7 @@ function fillForm(r){
   onTipoChange();
   document.getElementById('f-marca').value=r.marca||'';
   onMarcaChange();
-  document.getElementById('f-modelo').value=r.modelo||'';
+  ssSetValue('modelo', r.modelo||'');
   SINO_KEYS.forEach(k=>r[k]?setSino(k,r[k]):resetSino(k));
   colorAllSinos();
   onEstadoChange();
@@ -1614,7 +1695,8 @@ function render(resetPage=true){
   if(resetPage) _page=0;
   const q=document.getElementById('qInput').value.trim().toLowerCase();
   const rows=q?DB.filter(r=>[r.ticket,r.serial,r.hostname,r.placa,r.ip,r.user,r.userid,r.empresa,r.proyecto,r.marca,r.modelo,r.tipo].some(v=>v&&v.toLowerCase().includes(q))):DB;
-  const paged=rows.slice(_page*PAGE_SIZE, (_page+1)*PAGE_SIZE);
+  const sorted=getSortedDB(rows);
+  const paged=sorted.slice(_page*PAGE_SIZE, (_page+1)*PAGE_SIZE);
   const totalPages=Math.ceil(rows.length/PAGE_SIZE);
   document.getElementById('pillLbl').textContent=rows.length>PAGE_SIZE?`${paged.length}/${rows.length} (pág ${_page+1}/${totalPages})`:`${rows.length} / ${DB.length}`;
   if(document.getElementById('hdrCount'))document.getElementById('hdrCount').textContent=`${DB.length} equipo${DB.length!==1?'s':''}`;
@@ -1904,6 +1986,100 @@ function renderDash(){
   hbarCard('dEmpresa', freq(DB.map(r=>r.empresa).filter(Boolean)), t, 8, false);
   hbarCard('dProyecto', freq(DB.map(r=>r.proyecto).filter(Boolean)), t, 8, false);
 }
+
+/* ══════════════════════════════════════
+   SEARCHABLE SELECT ENGINE
+══════════════════════════════════════ */
+const SS_DATA = {};
+let _ssOpen = null;
+
+function ssInit(key, options){
+  SS_DATA[key] = options || [];
+  const list = document.getElementById('ss-'+key+'-list');
+  if(!list) return;
+  list.innerHTML = options && options.length
+    ? options.map(o=>`<div class="ss-opt" data-val="${o}" onclick="ssPick('${key}','${o}')">${o}</div>`).join('')
+    : '<div class="ss-empty">Sin opciones</div>';
+}
+
+function ssToggle(key){
+  const wrap = document.getElementById('ss-'+key+'-wrap');
+  const disp = document.getElementById('ss-'+key+'-display');
+  if(!wrap || !disp || disp.disabled) return;
+  const isOpen = wrap.classList.contains('open');
+  ssCloseAll();
+  if(!isOpen){
+    wrap.classList.add('open');
+    _ssOpen = key;
+    const search = document.getElementById('ss-'+key+'-search');
+    if(search){ search.value=''; ssFilter(key); setTimeout(()=>search.focus(),50); }
+    const sel = document.querySelector('#ss-'+key+'-list .ss-selected');
+    if(sel) setTimeout(()=>sel.scrollIntoView({block:'nearest'}),60);
+  }
+}
+
+function ssCloseAll(){
+  document.querySelectorAll('.ss-wrap.open').forEach(w=>w.classList.remove('open'));
+  _ssOpen = null;
+}
+
+function ssFilter(key){
+  const q=(document.getElementById('ss-'+key+'-search')?.value||'').toLowerCase();
+  const list=document.getElementById('ss-'+key+'-list');
+  if(!list) return;
+  let vis=0;
+  list.querySelectorAll('.ss-opt').forEach(opt=>{
+    const match=opt.dataset.val.toLowerCase().includes(q);
+    opt.classList.toggle('ss-hidden',!match);
+    if(match) vis++;
+  });
+  let empty=list.querySelector('.ss-empty');
+  if(!empty){ empty=document.createElement('div'); empty.className='ss-empty'; list.appendChild(empty); }
+  empty.textContent=vis===0?'Sin resultados':'';
+  empty.style.display=vis===0?'':'none';
+}
+
+function ssPick(key, val){
+  document.getElementById('f-'+key).value=val;
+  const disp=document.getElementById('ss-'+key+'-display');
+  if(disp){ disp.value=val; disp.classList.toggle('has-value',!!val); }
+  const list=document.getElementById('ss-'+key+'-list');
+  if(list) list.querySelectorAll('.ss-opt').forEach(o=>o.classList.toggle('ss-selected',o.dataset.val===val));
+  ssCloseAll();
+  ce(key); updProg();
+}
+
+function ssClear(key){
+  document.getElementById('f-'+key).value='';
+  const disp=document.getElementById('ss-'+key+'-display');
+  if(disp){ disp.value=''; disp.classList.remove('has-value'); }
+  const list=document.getElementById('ss-'+key+'-list');
+  if(list) list.querySelectorAll('.ss-selected').forEach(o=>o.classList.remove('ss-selected'));
+}
+
+function ssSetValue(key, val){
+  document.getElementById('f-'+key).value=val||'';
+  const disp=document.getElementById('ss-'+key+'-display');
+  if(disp){ disp.value=val||''; disp.classList.toggle('has-value',!!val); }
+  const list=document.getElementById('ss-'+key+'-list');
+  if(list) list.querySelectorAll('.ss-opt').forEach(o=>o.classList.toggle('ss-selected',o.dataset.val===val));
+}
+
+function ssEnable(key, enabled){
+  const wrap=document.getElementById('ss-'+key+'-wrap');
+  const disp=document.getElementById('ss-'+key+'-display');
+  if(disp){ disp.disabled=!enabled; }
+  if(wrap){ wrap.style.opacity=enabled?'1':'0.42'; }
+  if(!enabled) ssCloseAll();
+}
+
+document.addEventListener('click', e=>{
+  if(_ssOpen && !e.target.closest('.ss-wrap')) ssCloseAll();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && _ssOpen){ ssCloseAll(); e.stopPropagation(); }
+}, true);
+
 
 /* ── PANEL ── */
 function posPanel(){
@@ -2243,6 +2419,65 @@ function hideImport(){ setTimeout(()=>document.getElementById('importOverlay').c
 })();
 
 
+
+
+
+/* ── SEARCHABLE SELECT ENGINE ── */
+
+/* ════════════════════════════════════════
+   SEARCHABLE SELECT ENGINE
+════════════════════════════════════════ */
+const _SS = {}; // registry of open state per fiel/* ════════════════════════════════════════ */
+
+/* ── TABLE SORT ── */
+let _sortCol = null;
+let _sortDir = 1; // 1=asc, -1=desc
+
+const SORT_COLS = {
+  'ticket':   r=>r.ticket||'',
+  'serial':   r=>r.serial||'',
+  'hostname': r=>r.hostname||'',
+  'placa':    r=>r.placa||'',
+  'ip':       r=>{
+    // Sort IPs numerically
+    const parts=(r.ip||'').split('.').map(Number);
+    return parts.length===4 ? parts[0]*16777216+parts[1]*65536+parts[2]*256+parts[3] : 0;
+  },
+  'tipo':     r=>r.tipo||'',
+  'marca':    r=>r.marca||'',
+  'modelo':   r=>r.modelo||'',
+  'so':       r=>r.so||'',
+  'estado':   r=>r.estado||'',
+  'empresa':  r=>r.empresa||'',
+  'user':     r=>r.user||'',
+  'userid':   r=>r.userid||'',
+  'ubicacion':r=>r.ubicacion||'',
+  'fecha':    r=>r.fecha||'',
+  'proyecto': r=>r.proyecto||'',
+  'cmdb':     r=>r.cmdb||'',
+  'snow':     r=>r.snow||'',
+  'symantec': r=>r.symantec||'',
+  'discovery':r=>r.discovery||'',
+  'crowdstrike':r=>r.crowdstrike||'',
+  'blc':      r=>r.blc||'',
+  'bld':      r=>r.bld||'',
+};
+
+function sortBy(col){
+  if(_sortCol===col){ _sortDir*=-1; }
+  else { _sortCol=col; _sortDir=1; }
+  render(true);
+}
+
+function getSortedDB(rows){
+  if(!_sortCol || !SORT_COLS[_sortCol]) return rows;
+  const fn = SORT_COLS[_sortCol];
+  return [...rows].sort((a,b)=>{
+    const va=fn(a), vb=fn(b);
+    if(typeof va==='number' && typeof vb==='number') return (va-vb)*_sortDir;
+    return String(va).localeCompare(String(vb), 'es', {sensitivity:'base'})*_sortDir;
+  });
+}
 
 /* ── PAGINATION ── */
 let _page = 0;
