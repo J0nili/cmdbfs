@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════
-   Bnani.Labs
+   DESIGN TOKENS — basado en cmdb_flujograma
 ══════════════════════════════════════════ */
 :root {
   --ink:    #0a0a0a;
@@ -820,68 +820,113 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
 .fg.err .ss-input { border-color: var(--err) !important; background: var(--err-bg) !important; }
 
 
-/* ── FLOATING NOTES ── */
+/* ══ FAB BUTTON ══ */
+#fab {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+}
+.fab-main {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--ink); color: #fff; border: none;
+  font-size: 1.5rem; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.fab-main:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(0,0,0,.38); }
+.fab-main.active { transform: rotate(45deg); }
+.fab-options {
+  position: absolute; bottom: 60px; right: 0;
+  display: flex; flex-direction: column; align-items: flex-end; gap: .55rem;
+  pointer-events: none; opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.fab-options.open { pointer-events: all; opacity: 1; transform: none; }
+.fab-opt {
+  display: flex; align-items: center; gap: .55rem;
+  white-space: nowrap; cursor: pointer;
+}
+.fab-opt-lbl {
+  background: var(--ink); color: #fff;
+  font-family: var(--sans); font-size: .75rem; font-weight: 600;
+  padding: .32rem .75rem; border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.fab-opt-ico {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  flex-shrink: 0;
+}
+
+/* ══ FLOATING NOTES PANEL ══ */
 #floatNotes {
-  position: fixed; z-index: 410;
-  width: 320px; max-width: calc(100vw - 24px);
+  position: fixed; z-index: 450;
+  width: 340px; max-width: calc(100vw - 24px);
+  max-height: min(520px, 80dvh);
   background: #fefce8; border: 1px solid #fde047;
-  border-radius: var(--r-lg); box-shadow: 0 8px 28px rgba(0,0,0,.15);
+  border-radius: var(--r-lg); box-shadow: 0 8px 28px rgba(0,0,0,.18);
   display: none; flex-direction: column; overflow: hidden;
 }
 #floatNotes.open { display: flex; }
-#floatNotes.drag { opacity: .95; }
+#floatNotes.drag { opacity: .96; }
 .fn-head {
-  background: #fbbf24; color: #1c1917;
+  background: #f59e0b; color: #1c1917;
   padding: .5rem .75rem; display: flex; align-items: center; justify-content: space-between;
   cursor: grab; user-select: none; flex-shrink: 0; touch-action: none;
 }
 .fn-head:active { cursor: grabbing; }
-.fn-title { font-family: var(--display); font-size: .82rem; font-weight: 700; }
-.fn-controls { display: flex; gap: .25rem; }
+.fn-title { font-family: var(--display); font-size: .85rem; font-weight: 700; }
+.fn-controls { display: flex; gap: .2rem; }
 .fn-btn {
-  background: none; border: none; cursor: pointer; padding: .15rem .3rem;
-  font-size: .8rem; color: #1c1917; opacity: .65; border-radius: 3px; transition: var(--ease);
+  background: none; border: none; cursor: pointer; padding: .18rem .35rem;
+  font-size: .82rem; color: #1c1917; opacity: .6; border-radius: 3px; transition: var(--ease);
 }
-.fn-btn:hover { opacity: 1; background: rgba(0,0,0,.08); }
-.fn-body { flex: 1; padding: 0; }
+.fn-btn:hover { opacity: 1; background: rgba(0,0,0,.1); }
+/* Note tabs */
+.fn-tabs {
+  display: flex; overflow-x: auto; border-bottom: 1px solid #fde68a;
+  background: #fef9c3; flex-shrink: 0; -webkit-overflow-scrolling: touch;
+}
+.fn-tab {
+  padding: .35rem .65rem; font-family: var(--mono); font-size: .65rem;
+  white-space: nowrap; cursor: pointer; border-right: 1px solid #fde68a;
+  color: #a16207; transition: background var(--ease);
+  display: flex; align-items: center; gap: .3rem;
+}
+.fn-tab.active { background: #fefce8; color: #1c1917; font-weight: 700; }
+.fn-tab:hover:not(.active) { background: #fef3c7; }
+.fn-tab-del { opacity: .5; font-size: .6rem; padding: 0 .15rem; }
+.fn-tab-del:hover { opacity: 1; color: var(--rose); }
+.fn-tab-add { padding: .35rem .55rem; font-size: .85rem; color: #92400e; }
+.fn-tab-add:hover { background: #fef3c7; }
+/* Note title input */
+.fn-note-title {
+  border: none; border-bottom: 1px solid #fde68a;
+  background: transparent; outline: none;
+  padding: .45rem .75rem;
+  font-family: var(--sans); font-size: .8rem; font-weight: 600; color: #1c1917;
+  width: 100%; flex-shrink: 0;
+}
+.fn-note-title::placeholder { color: #ca8a04; font-weight: 400; }
+.fn-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .fn-textarea {
-  width: 100%; min-height: 180px; max-height: 60dvh;
+  width: 100%; flex: 1; min-height: 140px;
   border: none; outline: none; background: transparent;
-  padding: .75rem; font-family: var(--sans); font-size: .82rem;
-  color: #1c1917; resize: vertical; line-height: 1.6;
+  padding: .65rem .75rem;
+  font-family: var(--sans); font-size: .82rem;
+  color: #1c1917; resize: none; line-height: 1.6;
 }
 .fn-foot {
-  padding: .35rem .65rem; border-top: 1px solid #fde68a;
-  font-family: var(--mono); font-size: .58rem; color: #a16207;
+  padding: .3rem .65rem; border-top: 1px solid #fde68a;
+  font-family: var(--mono); font-size: .57rem; color: #a16207;
   display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
 }
 .fn-saved { color: #16a34a; }
 
-/* ── SPLIT BUTTON (Nuevo + Notas) ── */
-.split-btn { display: flex; align-items: stretch; flex-shrink: 0; }
-.split-btn .tbtn.pri { border-radius: var(--r) 0 0 var(--r); border-right: none; }
-.split-btn .split-arrow {
-  background: var(--ink); color: #fff;
-  border: none; border-radius: 0 var(--r) var(--r) 0;
-  border-left: 1px solid rgba(255,255,255,.2);
-  padding: 0 .5rem; cursor: pointer; font-size: .65rem; transition: var(--ease);
-}
-.split-btn .split-arrow:hover { background: var(--ink-2); }
-.split-menu {
-  position: absolute; top: calc(100% + 4px); right: 0; z-index: 200;
-  background: var(--paper); border: 1px solid var(--line);
-  border-radius: var(--r); box-shadow: var(--shad-lg);
-  min-width: 160px; display: none; flex-direction: column; overflow: hidden;
-}
-.split-menu.open { display: flex; }
-.split-menu-item {
-  padding: .55rem .85rem; font-family: var(--sans); font-size: .78rem;
-  cursor: pointer; transition: background var(--ease); color: var(--ink-2);
-  display: flex; align-items: center; gap: .5rem;
-}
-.split-menu-item:hover { background: var(--paper-2); color: var(--ink); }
-.split-menu-item .mi-icon { font-size: .9rem; }
-.split-wrap { position: relative; }
+
 
 </style>
 <body>
@@ -892,7 +937,7 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <div class="splash-title">CMDB</div>
     <div class="splash-sub">Site Support</div>
   </div>
-  <div class="splash-hint">Bnani.Labs</div>
+  <div class="splash-hint">Toca para continuar</div>
 </div>
 
 <header>
@@ -917,22 +962,9 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
       <input type="file" accept=".csv" onchange="importFile(this.files[0],this)">
     </label>
     <button class="tbtn" onclick="openExp()">⬇ Exportar</button>
-    <div class="split-wrap">
-      <div class="split-btn">
-        <button class="tbtn pri" id="btnN" onclick="togglePanel()">
-          <span id="btnIco">＋</span> Nuevo
-        </button>
-        <button class="split-arrow" onclick="toggleSplitMenu(event)" title="Más opciones">▾</button>
-      </div>
-      <div class="split-menu" id="splitMenu">
-        <div class="split-menu-item" onclick="closeSplitMenu();togglePanel()">
-          <span class="mi-icon">＋</span> Nuevo registro
-        </div>
-        <div class="split-menu-item" onclick="closeSplitMenu();toggleFNotes()">
-          <span class="mi-icon">📝</span> Notas flotantes
-        </div>
-      </div>
-    </div>
+    <button class="tbtn pri" id="btnN" onclick="togglePanel()">
+      <span id="btnIco">＋</span> Nuevo
+    </button>
   </div>
 </div>
 
@@ -1144,10 +1176,10 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <!-- USUARIO -->
     <div class="dps">Usuario asignado</div>
     <div class="dpg">
-      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="Nombre de Usuario" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
+      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="A1b2C3D4" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
       <div class="fg" id="fg-userid">
         <label>UserID <span class="rs">*</span><span style="font-family:var(--mono);font-size:.56rem;color:var(--ink-5);font-weight:400;margin-left:.3rem;letter-spacing:0">Usuario de red</span></label>
-        <input id="f-userid" type="text" placeholder="A1b2C3D4" oninput="ce('userid');this.value=this.value.toUpperCase()">
+        <input id="f-userid" type="text" placeholder="NOMBRE.APELLIDO" oninput="ce('userid');this.value=this.value.toUpperCase()">
         <span class="err-msg">Requerido</span>
       </div>
       <div class="fg dpf" id="fg-fecha"><label>Fecha cargue <span class="rs">*</span></label><input id="f-fecha" type="date" onchange="ce('fecha')"><span class="err-msg">Requerido</span></div>
@@ -1312,24 +1344,40 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
 </div>
 
 
-<!-- FLOATING NOTES -->
+<!-- FLOATING NOTES PANEL -->
 <div id="floatNotes">
   <div class="fn-head" id="fnHead">
-    <span class="fn-title">📝 Notas rápidas</span>
+    <span class="fn-title">📝 Notas</span>
     <div class="fn-controls">
-      <button class="fn-btn" onclick="clearFNotes()" title="Limpiar notas">🗑</button>
       <button class="fn-btn" onclick="toggleFNotes()" title="Cerrar">✕</button>
     </div>
   </div>
+  <div class="fn-tabs" id="fnTabs"></div>
+  <input class="fn-note-title" id="fnNoteTitle" type="text" placeholder="Título de la nota…" oninput="saveCurrentNote()">
   <div class="fn-body">
     <textarea class="fn-textarea" id="fnText"
-      placeholder="Escribe tus notas rápidas aquí…&#10;Se guardan automáticamente."
-      oninput="saveFNotes()"></textarea>
+      placeholder="Escribe aquí tu nota…&#10;Se guarda automáticamente."
+      oninput="saveCurrentNote()"></textarea>
   </div>
   <div class="fn-foot">
-    <span id="fnStatus">Guardado</span>
+    <span id="fnStatus">Listo</span>
     <span id="fnCount">0 caracteres</span>
   </div>
+</div>
+
+<!-- FAB (Floating Action Button) -->
+<div id="fab">
+  <div class="fab-options" id="fabOptions">
+    <div class="fab-opt" onclick="closeFab();togglePanel()">
+      <span class="fab-opt-lbl">Nuevo registro</span>
+      <div class="fab-opt-ico">＋</div>
+    </div>
+    <div class="fab-opt" onclick="closeFab();toggleFNotes()">
+      <span class="fab-opt-lbl">Notas flotantes</span>
+      <div class="fab-opt-ico">📝</div>
+    </div>
+  </div>
+  <button class="fab-main" id="fabBtn" onclick="toggleFab()" title="Acciones rápidas">＋</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2301,8 +2349,8 @@ function openDet(id){
 
 function copyDetail(){
   const r=DB.find(x=>x.id===_detCurrentId);if(!r)return;
-  const row=(label,val,pad=16)=>`  ${(label+':').padEnd(pad)} ${val||'—'}`;
-  const sep=(title)=>`\n── ${title.toUpperCase()} ${'─'.repeat(Math.max(2,40-title.length))}`;
+  const row=(label,val)=>`${label}: ${val||'—'}`;
+  const sep=(title)=>`\n── ${title.toUpperCase()} ${'─'.repeat(Math.max(2,42-title.length-3))}`;
   const lines=[
     sep('Identificación del equipo'),
     row('Ticket',         r.ticket),
@@ -2643,95 +2691,148 @@ document.addEventListener('keydown', e=>{
 });
 
 
-/* ── FLOATING NOTES ── */
-const FN_KEY = 'cmdb_float_notes';
+/* ══ MULTI-NOTE SYSTEM ══ */
+const FN_KEY = 'cmdb_notes_v2';
+let _notes = [];          // [{id, title, body}]
+let _activeNote = null;
 let _fnSaveTimer;
 
-function loadFNotes(){
-  const saved = localStorage.getItem(FN_KEY)||'';
-  const ta = document.getElementById('fnText');
-  if(ta){ ta.value = saved; updateFNCount(); }
+function fnLoad(){
+  try{ _notes = JSON.parse(localStorage.getItem(FN_KEY)) || []; }catch(e){ _notes=[]; }
+  if(!_notes.length) _notes = [{ id: fnUid(), title: 'Nota 1', body: '' }];
+  _activeNote = _notes[0].id;
+  fnRenderTabs();
+  fnShowActive();
 }
 
-function saveFNotes(){
+function fnSave(){
+  try{ localStorage.setItem(FN_KEY, JSON.stringify(_notes)); }catch(e){ document.getElementById('fnStatus').textContent='⚠ Almacenamiento lleno'; }
+}
+
+function fnUid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function fnRenderTabs(){
+  const container = document.getElementById('fnTabs');
+  if(!container) return;
+  container.innerHTML = _notes.map(n=>`
+    <div class="fn-tab${n.id===_activeNote?' active':''}" onclick="fnSwitchNote('${n.id}')">
+      <span>${n.title||'Sin título'}</span>
+      <span class="fn-tab-del" onclick="event.stopPropagation();fnDeleteNote('${n.id}')" title="Eliminar nota">✕</span>
+    </div>`).join('')
+  + `<div class="fn-tab fn-tab-add" onclick="fnNewNote()" title="Nueva nota">＋</div>`;
+}
+
+function fnShowActive(){
+  const note = _notes.find(n=>n.id===_activeNote);
+  if(!note) return;
+  const titleEl = document.getElementById('fnNoteTitle');
+  const textEl  = document.getElementById('fnText');
+  if(titleEl) titleEl.value = note.title;
+  if(textEl)  textEl.value  = note.body;
+  fnUpdateCount();
+}
+
+function fnSwitchNote(id){
+  _activeNote = id;
+  fnRenderTabs();
+  fnShowActive();
+}
+
+function fnNewNote(){
+  const n = { id: fnUid(), title: 'Nota '+ (_notes.length+1), body: '' };
+  _notes.push(n);
+  _activeNote = n.id;
+  fnSave();
+  fnRenderTabs();
+  fnShowActive();
+  setTimeout(()=>document.getElementById('fnNoteTitle')?.select(), 50);
+}
+
+function fnDeleteNote(id){
+  if(_notes.length === 1){ toast('Debe existir al menos una nota'); return; }
+  if(!confirm('¿Eliminar esta nota?')) return;
+  _notes = _notes.filter(n=>n.id!==id);
+  if(_activeNote===id) _activeNote = _notes[0].id;
+  fnSave();
+  fnRenderTabs();
+  fnShowActive();
+}
+
+function saveCurrentNote(){
   clearTimeout(_fnSaveTimer);
-  document.getElementById('fnStatus').textContent = 'Guardando…';
+  const st = document.getElementById('fnStatus');
+  if(st) st.textContent='Guardando…';
   _fnSaveTimer = setTimeout(()=>{
-    try{
-      localStorage.setItem(FN_KEY, document.getElementById('fnText').value);
-      document.getElementById('fnStatus').textContent = '✓ Guardado';
-      document.getElementById('fnStatus').className = 'fn-saved';
-      setTimeout(()=>{
-        const el=document.getElementById('fnStatus');
-        if(el){el.textContent='Guardado';el.className='';}
-      }, 2000);
-    }catch(e){ document.getElementById('fnStatus').textContent='⚠ Error'; }
-    updateFNCount();
-  }, 600);
+    const note = _notes.find(n=>n.id===_activeNote);
+    if(note){
+      note.title = document.getElementById('fnNoteTitle')?.value || 'Sin título';
+      note.body  = document.getElementById('fnText')?.value || '';
+      fnSave();
+      fnRenderTabs();
+    }
+    fnUpdateCount();
+    if(st){ st.textContent='✓ Guardado'; st.className='fn-saved';
+      setTimeout(()=>{ if(st){st.textContent='Listo';st.className='';} },1800); }
+  }, 500);
 }
 
-function updateFNCount(){
-  const ta=document.getElementById('fnText');
-  const el=document.getElementById('fnCount');
-  if(ta&&el) el.textContent=ta.value.length+' caracteres';
-}
-
-function clearFNotes(){
-  if(!confirm('¿Limpiar todas las notas flotantes?')) return;
-  document.getElementById('fnText').value='';
-  localStorage.removeItem(FN_KEY);
-  updateFNCount();
-  document.getElementById('fnStatus').textContent='Notas limpiadas';
+function fnUpdateCount(){
+  const ta = document.getElementById('fnText');
+  const el = document.getElementById('fnCount');
+  if(ta && el) el.textContent = ta.value.length + ' caracteres';
 }
 
 function toggleFNotes(){
-  const p=document.getElementById('floatNotes');
+  const p = document.getElementById('floatNotes');
   if(p.classList.contains('open')){
     p.classList.remove('open');
   } else {
-    // Position: bottom-left corner
-    const mob=window.innerWidth<=640;
+    const mob = window.innerWidth <= 640;
     if(mob){
-      p.style.left='12px'; p.style.bottom='80px'; p.style.top='auto'; p.style.right='auto';
+      p.style.left='12px'; p.style.bottom='90px'; p.style.top='auto'; p.style.right='auto';
     } else {
-      p.style.left='20px'; p.style.top=Math.max(80,window.innerHeight-480)+'px'; p.style.bottom='auto'; p.style.right='auto';
+      p.style.left='24px'; p.style.top=Math.max(80,window.innerHeight-540)+'px'; p.style.bottom='auto'; p.style.right='auto';
     }
     p.classList.add('open');
-    loadFNotes();
-    setTimeout(()=>document.getElementById('fnText').focus(),100);
+    fnLoad();
   }
 }
 
-// Drag for notes panel
+// Drag
 (function(){
-  const p=document.getElementById('floatNotes');
-  const h=document.getElementById('fnHead');
+  const p=document.getElementById('floatNotes'), h=document.getElementById('fnHead');
+  if(!p||!h) return;
   let drag=false,sx,sy,ol,ot;
-  const dn=(ex,ey)=>{ drag=true; const r=p.getBoundingClientRect(); sx=ex;sy=ey;ol=r.left;ot=r.top; p.classList.add('drag'); };
-  const mv=(ex,ey)=>{ if(!drag) return; let nl=ol+(ex-sx),nt=ot+(ey-sy); nl=Math.max(0,Math.min(nl,window.innerWidth-p.offsetWidth)); nt=Math.max(0,Math.min(nt,window.innerHeight-40)); p.style.left=nl+'px';p.style.top=nt+'px';p.style.bottom='auto'; };
-  const up=()=>{ drag=false; p.classList.remove('drag'); };
-  h.addEventListener('mousedown',e=>{ if(e.target.closest('button'))return; dn(e.clientX,e.clientY); e.preventDefault(); });
+  const dn=(ex,ey)=>{ drag=true;const r=p.getBoundingClientRect();sx=ex;sy=ey;ol=r.left;ot=r.top;p.classList.add('drag'); };
+  const mv=(ex,ey)=>{ if(!drag)return;let nl=ol+(ex-sx),nt=ot+(ey-sy);nl=Math.max(0,Math.min(nl,window.innerWidth-p.offsetWidth));nt=Math.max(0,Math.min(nt,window.innerHeight-40));p.style.left=nl+'px';p.style.top=nt+'px';p.style.bottom='auto'; };
+  const up=()=>{ drag=false;p.classList.remove('drag'); };
+  h.addEventListener('mousedown',e=>{ if(e.target.closest('button')||e.target.closest('.fn-tab'))return;dn(e.clientX,e.clientY);e.preventDefault(); });
   document.addEventListener('mousemove',e=>{ if(drag)mv(e.clientX,e.clientY); });
   document.addEventListener('mouseup',up);
-  h.addEventListener('touchstart',e=>{ if(e.target.closest('button'))return; const t=e.touches[0]; dn(t.clientX,t.clientY); },{passive:true});
-  h.addEventListener('touchmove',e=>{ const t=e.touches[0]; mv(t.clientX,t.clientY); e.preventDefault(); },{passive:false});
+  h.addEventListener('touchstart',e=>{ if(e.target.closest('button')||e.target.closest('.fn-tab'))return;const t=e.touches[0];dn(t.clientX,t.clientY); },{passive:true});
+  h.addEventListener('touchmove',e=>{ const t=e.touches[0];mv(t.clientX,t.clientY);e.preventDefault(); },{passive:false});
   h.addEventListener('touchend',up);
 })();
 
-/* ── SPLIT MENU ── */
-function toggleSplitMenu(e){
-  e.stopPropagation();
-  const m=document.getElementById('splitMenu');
-  m.classList.toggle('open');
+/* ══ FAB ══ */
+let _fabOpen = false;
+function toggleFab(){
+  _fabOpen = !_fabOpen;
+  document.getElementById('fabOptions').classList.toggle('open', _fabOpen);
+  document.getElementById('fabBtn').classList.toggle('active', _fabOpen);
 }
-function closeSplitMenu(){
-  document.getElementById('splitMenu').classList.remove('open');
+function closeFab(){
+  _fabOpen = false;
+  document.getElementById('fabOptions').classList.remove('open');
+  document.getElementById('fabBtn').classList.remove('active');
 }
 document.addEventListener('click', e=>{
-  if(!e.target.closest('.split-wrap')) closeSplitMenu();
+  if(!e.target.closest('#fab')) closeFab();
 });
-
-loadFNotes();
+// Esc closes fab
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && _fabOpen) closeFab();
+});
 
 /* ── TOAST ── */
 let _tt;
