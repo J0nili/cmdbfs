@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════
-   Bonnie
+   Bnani.Labs
 ══════════════════════════════════════════ */
 :root {
   --ink:    #0a0a0a;
@@ -819,6 +819,70 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
 .ss-empty { padding: .45rem .7rem; font-size: .78rem; color: var(--ink-4); font-style: italic; }
 .fg.err .ss-input { border-color: var(--err) !important; background: var(--err-bg) !important; }
 
+
+/* ── FLOATING NOTES ── */
+#floatNotes {
+  position: fixed; z-index: 410;
+  width: 320px; max-width: calc(100vw - 24px);
+  background: #fefce8; border: 1px solid #fde047;
+  border-radius: var(--r-lg); box-shadow: 0 8px 28px rgba(0,0,0,.15);
+  display: none; flex-direction: column; overflow: hidden;
+}
+#floatNotes.open { display: flex; }
+#floatNotes.drag { opacity: .95; }
+.fn-head {
+  background: #fbbf24; color: #1c1917;
+  padding: .5rem .75rem; display: flex; align-items: center; justify-content: space-between;
+  cursor: grab; user-select: none; flex-shrink: 0; touch-action: none;
+}
+.fn-head:active { cursor: grabbing; }
+.fn-title { font-family: var(--display); font-size: .82rem; font-weight: 700; }
+.fn-controls { display: flex; gap: .25rem; }
+.fn-btn {
+  background: none; border: none; cursor: pointer; padding: .15rem .3rem;
+  font-size: .8rem; color: #1c1917; opacity: .65; border-radius: 3px; transition: var(--ease);
+}
+.fn-btn:hover { opacity: 1; background: rgba(0,0,0,.08); }
+.fn-body { flex: 1; padding: 0; }
+.fn-textarea {
+  width: 100%; min-height: 180px; max-height: 60dvh;
+  border: none; outline: none; background: transparent;
+  padding: .75rem; font-family: var(--sans); font-size: .82rem;
+  color: #1c1917; resize: vertical; line-height: 1.6;
+}
+.fn-foot {
+  padding: .35rem .65rem; border-top: 1px solid #fde68a;
+  font-family: var(--mono); font-size: .58rem; color: #a16207;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.fn-saved { color: #16a34a; }
+
+/* ── SPLIT BUTTON (Nuevo + Notas) ── */
+.split-btn { display: flex; align-items: stretch; flex-shrink: 0; }
+.split-btn .tbtn.pri { border-radius: var(--r) 0 0 var(--r); border-right: none; }
+.split-btn .split-arrow {
+  background: var(--ink); color: #fff;
+  border: none; border-radius: 0 var(--r) var(--r) 0;
+  border-left: 1px solid rgba(255,255,255,.2);
+  padding: 0 .5rem; cursor: pointer; font-size: .65rem; transition: var(--ease);
+}
+.split-btn .split-arrow:hover { background: var(--ink-2); }
+.split-menu {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 200;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shad-lg);
+  min-width: 160px; display: none; flex-direction: column; overflow: hidden;
+}
+.split-menu.open { display: flex; }
+.split-menu-item {
+  padding: .55rem .85rem; font-family: var(--sans); font-size: .78rem;
+  cursor: pointer; transition: background var(--ease); color: var(--ink-2);
+  display: flex; align-items: center; gap: .5rem;
+}
+.split-menu-item:hover { background: var(--paper-2); color: var(--ink); }
+.split-menu-item .mi-icon { font-size: .9rem; }
+.split-wrap { position: relative; }
+
 </style>
 <body>
 
@@ -828,7 +892,7 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <div class="splash-title">CMDB</div>
     <div class="splash-sub">Site Support</div>
   </div>
-  <div class="splash-hint">Toca para continuar</div>
+  <div class="splash-hint">Bnani.Labs</div>
 </div>
 
 <header>
@@ -853,9 +917,22 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
       <input type="file" accept=".csv" onchange="importFile(this.files[0],this)">
     </label>
     <button class="tbtn" onclick="openExp()">⬇ Exportar</button>
-    <button class="tbtn pri" id="btnN" onclick="togglePanel()">
-      <span id="btnIco">＋</span> Nuevo
-    </button>
+    <div class="split-wrap">
+      <div class="split-btn">
+        <button class="tbtn pri" id="btnN" onclick="togglePanel()">
+          <span id="btnIco">＋</span> Nuevo
+        </button>
+        <button class="split-arrow" onclick="toggleSplitMenu(event)" title="Más opciones">▾</button>
+      </div>
+      <div class="split-menu" id="splitMenu">
+        <div class="split-menu-item" onclick="closeSplitMenu();togglePanel()">
+          <span class="mi-icon">＋</span> Nuevo registro
+        </div>
+        <div class="split-menu-item" onclick="closeSplitMenu();toggleFNotes()">
+          <span class="mi-icon">📝</span> Notas flotantes
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1025,8 +1102,11 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
         <label>Estado <span class="rs">*</span></label>
         <select id="f-estado" onchange="ce('estado');onEstadoChange()">
           <option value="">— Seleccionar —</option>
-          <option>Installed</option><option>In Stock</option>
-          <option>Retired</option><option>Stolen</option><option>Other</option>
+          <option value="Installed">Installed - Instalado</option>
+          <option value="In Stock">In Stock - Bodega</option>
+          <option value="Retired">Retired - Retirado</option>
+          <option value="Stolen">Stolen - Robo</option>
+          <option value="Other">Other</option>
         </select>
         <span class="err-msg">Requerido</span>
       </div>
@@ -1064,10 +1144,10 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <!-- USUARIO -->
     <div class="dps">Usuario asignado</div>
     <div class="dpg">
-      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="A1B2C3" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
+      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="Nombre de Usuario" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
       <div class="fg" id="fg-userid">
         <label>UserID <span class="rs">*</span><span style="font-family:var(--mono);font-size:.56rem;color:var(--ink-5);font-weight:400;margin-left:.3rem;letter-spacing:0">Usuario de red</span></label>
-        <input id="f-userid" type="text" placeholder="NOMBRE.APELLIDO" oninput="ce('userid');this.value=this.value.toUpperCase()">
+        <input id="f-userid" type="text" placeholder="A1b2C3D4" oninput="ce('userid');this.value=this.value.toUpperCase()">
         <span class="err-msg">Requerido</span>
       </div>
       <div class="fg dpf" id="fg-fecha"><label>Fecha cargue <span class="rs">*</span></label><input id="f-fecha" type="date" onchange="ce('fecha')"><span class="err-msg">Requerido</span></div>
@@ -1228,6 +1308,27 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
       </div>
     </div>
     <div class="sh-f"><button class="bsec" onclick="closeExp()" style="max-width:120px">Cerrar</button></div>
+  </div>
+</div>
+
+
+<!-- FLOATING NOTES -->
+<div id="floatNotes">
+  <div class="fn-head" id="fnHead">
+    <span class="fn-title">📝 Notas rápidas</span>
+    <div class="fn-controls">
+      <button class="fn-btn" onclick="clearFNotes()" title="Limpiar notas">🗑</button>
+      <button class="fn-btn" onclick="toggleFNotes()" title="Cerrar">✕</button>
+    </div>
+  </div>
+  <div class="fn-body">
+    <textarea class="fn-textarea" id="fnText"
+      placeholder="Escribe tus notas rápidas aquí…&#10;Se guardan automáticamente."
+      oninput="saveFNotes()"></textarea>
+  </div>
+  <div class="fn-foot">
+    <span id="fnStatus">Guardado</span>
+    <span id="fnCount">0 caracteres</span>
   </div>
 </div>
 
@@ -1705,7 +1806,7 @@ function render(resetPage=true){
     tb.innerHTML=`<tr><td colspan="25"><div class="empty"><span class="empty-i">🗄</span><span style='font-size:.82rem'>${q?'Sin resultados para "'+q+'"':'Sin registros · presiona Nuevo para agregar'}</span></div></td></tr>`;
     return;
   }
-  const ec={'Installed':'est-installed','In Stock':'est-instock','Retired':'est-retired','Stolen':'est-stolen','Other':'est-other'};
+  const ec={'Installed':'est-installed','In Stock':'est-instock','Retired':'est-retired','Stolen':'est-stolen','Other':'est-other','Installed - Instalado':'est-installed','In Stock - Bodega':'est-instock','Retired - Retirado':'est-retired','Stolen - Robo':'est-stolen'};
   const ck=v=>`<span class="ck ${v==='Si'?'ck-y':'ck-n'}">${v||'—'}</span>`;
   const blCell=(val,code)=>{
     if(val==='Si' && code) return `<span style="font-family:var(--mono);font-size:.58rem;background:var(--ink);color:#fff;padding:1px 5px;border-radius:3px;letter-spacing:.02em;display:inline-block;max-width:100px;overflow:hidden;text-overflow:ellipsis" title="${code}">${code}</span>`;
@@ -2151,22 +2252,48 @@ let _detCurrentId = null;
 
 function openDet(id){
   const r=DB.find(x=>x.id===id);if(!r)return;
-  _detCurrentId = id;
+  _detCurrentId=id;
   document.getElementById('detTtl').textContent=r.hostname||r.serial||'Detalle';
   const ck=v=>`<span class="ck ${v==='Si'?'ck-y':'ck-n'}" style="display:inline-flex">${v||'—'}</span>`;
-  const data=[
-    ['Ticket',r.ticket],
-    ['Serial',r.serial],['Hostname',r.hostname],['Placa',r.placa],['IP',r.ip],
-    ['Tipo',r.tipo],['Marca',r.marca],['Modelo',r.modelo],['S.O',r.so],
-    ['Estado',r.estado],['Empresa',r.empresa],['User',r.user],['User Id',r.userid],
-    ['Ubicación',r.ubicacion],['Fecha cargue',r.fecha],['Proyecto',r.proyecto],
-    ['CMDB',ck(r.cmdb)],['Snow',ck(r.snow)],['Symantec',ck(r.symantec)],
-    ['Discovery',ck(r.discovery)],['Crowdstrike',ck(r.crowdstrike)],
-    ['Bitlocker C',r.blc+(r.blcCode?` <span style="font-family:var(--mono);font-size:.68rem;background:var(--paper-2);padding:1px 5px;border-radius:3px">${r.blcCode}</span>`:'')],
-    ['Bitlocker D',r.bld+(r.bldCode?` <span style="font-family:var(--mono);font-size:.68rem;background:var(--paper-2);padding:1px 5px;border-radius:3px">${r.bldCode}</span>`:'')],
-    ['Notas',r.notas||'—']
-  ];
-  document.getElementById('detBody').innerHTML=data.map(([k,v])=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v||'—'}</span></div>`).join('');
+  const row=(k,v)=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v||'—'}</span></div>`;
+  const sec=(title)=>`<div style="font-family:var(--mono);font-size:.57rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-5);padding:.65rem 0 .2rem;margin-top:.4rem;display:flex;align-items:center;gap:.4rem"><span>${title}</span><span style="flex:1;height:1px;background:var(--line);display:block"></span></div>`;
+
+  const blcVal = r.blc+(r.blcCode?` <span style="font-family:var(--mono);font-size:.65rem;background:var(--paper-2);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:.3rem">${r.blcCode}</span>`:'');
+  const bldVal = r.bld+(r.bldCode?` <span style="font-family:var(--mono);font-size:.65rem;background:var(--paper-2);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:.3rem">${r.bldCode}</span>`:'');
+
+  document.getElementById('detBody').innerHTML = [
+    sec('Identificación del equipo'),
+    row('Ticket',       r.ticket),
+    row('Serial',       r.serial),
+    row('Hostname',     r.hostname),
+    row('Placa',        r.placa),
+    row('IP',           r.ip),
+    sec('Hardware'),
+    row('Tipo',         r.tipo),
+    row('Marca',        r.marca),
+    row('Modelo',       r.modelo),
+    row('S.O',          r.so),
+    sec('Organización'),
+    row('Estado',       r.estado),
+    row('Empresa',      r.empresa),
+    row('Ubicación',    r.ubicacion),
+    row('Proyecto',     r.proyecto),
+    sec('Usuario asignado'),
+    row('Usuario',      r.user),
+    row('UserID',       r.userid),
+    row('Fecha cargue', r.fecha),
+    sec('Herramientas / Controles'),
+    row('CMDB',         ck(r.cmdb)),
+    row('Snow',         ck(r.snow)),
+    row('Symantec',     ck(r.symantec)),
+    row('Discovery',    ck(r.discovery)),
+    row('Crowdstrike',  ck(r.crowdstrike)),
+    row('Bitlocker C',  blcVal),
+    row('Bitlocker D',  bldVal),
+    sec('Notas'),
+    `<div style="font-size:.8rem;color:var(--ink-2);padding:.4rem 0;line-height:1.6;white-space:pre-wrap">${r.notas||'—'}</div>`,
+  ].join('');
+
   document.getElementById('detEdit').onclick=()=>openEdit(id);
   document.getElementById('oDet').classList.add('open');
   document.body.style.overflow='hidden';
@@ -2174,34 +2301,41 @@ function openDet(id){
 
 function copyDetail(){
   const r=DB.find(x=>x.id===_detCurrentId);if(!r)return;
-  const row=(label,val)=>`${label}: ${val||'—'}`;
+  const row=(label,val,pad=16)=>`  ${(label+':').padEnd(pad)} ${val||'—'}`;
+  const sep=(title)=>`\n── ${title.toUpperCase()} ${'─'.repeat(Math.max(2,40-title.length))}`;
   const lines=[
-    row('Ticket',        r.ticket),
-    row('Serial',        r.serial),
-    row('Hostname',      r.hostname),
-    row('Placa',         r.placa),
-    row('IP',            r.ip),
-    row('Tipo',          r.tipo),
-    row('Marca',         r.marca),
-    row('Modelo',        r.modelo),
-    row('S.O',           r.so),
-    row('Estado',        r.estado),
-    row('Empresa',       r.empresa),
-    row('Usuario',       r.user),
-    row('Usuario de red',r.userid),
-    row('Ubicación',     r.ubicacion),
-    row('Fecha cargue',  r.fecha),
-    row('Proyecto',      r.proyecto),
-    row('CMDB',          r.cmdb),
-    row('Snow',          r.snow),
-    row('Symantec',      r.symantec),
-    row('Discovery',     r.discovery),
-    row('Crowdstrike',   r.crowdstrike),
-    row('Bitlocker C',   r.blc + (r.blcCode ? ' ['+r.blcCode+']' : '')),
-    row('Bitlocker D',   r.bld + (r.bldCode ? ' ['+r.bldCode+']' : '')),
-    row('Notas',         r.notas),
+    sep('Identificación del equipo'),
+    row('Ticket',         r.ticket),
+    row('Serial',         r.serial),
+    row('Hostname',       r.hostname),
+    row('Placa',          r.placa),
+    row('IP',             r.ip),
+    sep('Hardware'),
+    row('Tipo',           r.tipo),
+    row('Marca',          r.marca),
+    row('Modelo',         r.modelo),
+    row('S.O',            r.so),
+    sep('Organización'),
+    row('Estado',         r.estado),
+    row('Empresa',        r.empresa),
+    row('Ubicación',      r.ubicacion),
+    row('Proyecto',       r.proyecto),
+    sep('Usuario asignado'),
+    row('Usuario',        r.user),
+    row('UserID',         r.userid),
+    row('Fecha cargue',   r.fecha),
+    sep('Herramientas / Controles'),
+    row('CMDB',           r.cmdb),
+    row('Snow',           r.snow),
+    row('Symantec',       r.symantec),
+    row('Discovery',      r.discovery),
+    row('Crowdstrike',    r.crowdstrike),
+    row('Bitlocker C',    r.blc+(r.blcCode?' ['+r.blcCode+']':'')),
+    row('Bitlocker D',    r.bld+(r.bldCode?' ['+r.bldCode+']':'')),
+    sep('Notas'),
+    r.notas ? `  ${r.notas}` : '  —',
   ];
-  const txt = lines.join('\n');
+  const txt=lines.join('\n');
   if(navigator.clipboard){
     navigator.clipboard.writeText(txt).then(()=>{
       const btn=document.getElementById('detCopy');
@@ -2212,6 +2346,7 @@ function copyDetail(){
     }).catch(()=>fallbackCopy(txt));
   } else { fallbackCopy(txt); }
 }
+
 
 function fallbackCopy(txt){
   const ta=document.createElement('textarea');
@@ -2506,6 +2641,97 @@ document.addEventListener('keydown', e=>{
     e.preventDefault(); openPanel();
   }
 });
+
+
+/* ── FLOATING NOTES ── */
+const FN_KEY = 'cmdb_float_notes';
+let _fnSaveTimer;
+
+function loadFNotes(){
+  const saved = localStorage.getItem(FN_KEY)||'';
+  const ta = document.getElementById('fnText');
+  if(ta){ ta.value = saved; updateFNCount(); }
+}
+
+function saveFNotes(){
+  clearTimeout(_fnSaveTimer);
+  document.getElementById('fnStatus').textContent = 'Guardando…';
+  _fnSaveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(FN_KEY, document.getElementById('fnText').value);
+      document.getElementById('fnStatus').textContent = '✓ Guardado';
+      document.getElementById('fnStatus').className = 'fn-saved';
+      setTimeout(()=>{
+        const el=document.getElementById('fnStatus');
+        if(el){el.textContent='Guardado';el.className='';}
+      }, 2000);
+    }catch(e){ document.getElementById('fnStatus').textContent='⚠ Error'; }
+    updateFNCount();
+  }, 600);
+}
+
+function updateFNCount(){
+  const ta=document.getElementById('fnText');
+  const el=document.getElementById('fnCount');
+  if(ta&&el) el.textContent=ta.value.length+' caracteres';
+}
+
+function clearFNotes(){
+  if(!confirm('¿Limpiar todas las notas flotantes?')) return;
+  document.getElementById('fnText').value='';
+  localStorage.removeItem(FN_KEY);
+  updateFNCount();
+  document.getElementById('fnStatus').textContent='Notas limpiadas';
+}
+
+function toggleFNotes(){
+  const p=document.getElementById('floatNotes');
+  if(p.classList.contains('open')){
+    p.classList.remove('open');
+  } else {
+    // Position: bottom-left corner
+    const mob=window.innerWidth<=640;
+    if(mob){
+      p.style.left='12px'; p.style.bottom='80px'; p.style.top='auto'; p.style.right='auto';
+    } else {
+      p.style.left='20px'; p.style.top=Math.max(80,window.innerHeight-480)+'px'; p.style.bottom='auto'; p.style.right='auto';
+    }
+    p.classList.add('open');
+    loadFNotes();
+    setTimeout(()=>document.getElementById('fnText').focus(),100);
+  }
+}
+
+// Drag for notes panel
+(function(){
+  const p=document.getElementById('floatNotes');
+  const h=document.getElementById('fnHead');
+  let drag=false,sx,sy,ol,ot;
+  const dn=(ex,ey)=>{ drag=true; const r=p.getBoundingClientRect(); sx=ex;sy=ey;ol=r.left;ot=r.top; p.classList.add('drag'); };
+  const mv=(ex,ey)=>{ if(!drag) return; let nl=ol+(ex-sx),nt=ot+(ey-sy); nl=Math.max(0,Math.min(nl,window.innerWidth-p.offsetWidth)); nt=Math.max(0,Math.min(nt,window.innerHeight-40)); p.style.left=nl+'px';p.style.top=nt+'px';p.style.bottom='auto'; };
+  const up=()=>{ drag=false; p.classList.remove('drag'); };
+  h.addEventListener('mousedown',e=>{ if(e.target.closest('button'))return; dn(e.clientX,e.clientY); e.preventDefault(); });
+  document.addEventListener('mousemove',e=>{ if(drag)mv(e.clientX,e.clientY); });
+  document.addEventListener('mouseup',up);
+  h.addEventListener('touchstart',e=>{ if(e.target.closest('button'))return; const t=e.touches[0]; dn(t.clientX,t.clientY); },{passive:true});
+  h.addEventListener('touchmove',e=>{ const t=e.touches[0]; mv(t.clientX,t.clientY); e.preventDefault(); },{passive:false});
+  h.addEventListener('touchend',up);
+})();
+
+/* ── SPLIT MENU ── */
+function toggleSplitMenu(e){
+  e.stopPropagation();
+  const m=document.getElementById('splitMenu');
+  m.classList.toggle('open');
+}
+function closeSplitMenu(){
+  document.getElementById('splitMenu').classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.split-wrap')) closeSplitMenu();
+});
+
+loadFNotes();
 
 /* ── TOAST ── */
 let _tt;
