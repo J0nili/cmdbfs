@@ -937,7 +937,7 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <div class="splash-title">CMDB</div>
     <div class="splash-sub">Site Support</div>
   </div>
-  <div class="splash-hint">Toca para continuar</div>
+  <div class="splash-hint">Bnani.Labs</div>
 </div>
 
 <header>
@@ -962,9 +962,6 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
       <input type="file" accept=".csv" onchange="importFile(this.files[0],this)">
     </label>
     <button class="tbtn" onclick="openExp()">⬇ Exportar</button>
-    <button class="tbtn pri" id="btnN" onclick="togglePanel()">
-      <span id="btnIco">＋</span> Nuevo
-    </button>
   </div>
 </div>
 
@@ -1176,10 +1173,10 @@ thead th.sortable  .sort-icon::after { content: ' ↕'; opacity: .3; font-size: 
     <!-- USUARIO -->
     <div class="dps">Usuario asignado</div>
     <div class="dpg">
-      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="A1b2C3D4" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
+      <div class="fg" id="fg-user"><label>User <span class="rs">*</span></label><input id="f-user" type="text" placeholder="Nombre.Apellido" oninput="ce('user');this.value=this.value.replace(/\S+/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase())"><span class="err-msg">Requerido</span></div>
       <div class="fg" id="fg-userid">
         <label>UserID <span class="rs">*</span><span style="font-family:var(--mono);font-size:.56rem;color:var(--ink-5);font-weight:400;margin-left:.3rem;letter-spacing:0">Usuario de red</span></label>
-        <input id="f-userid" type="text" placeholder="NOMBRE.APELLIDO" oninput="ce('userid');this.value=this.value.toUpperCase()">
+        <input id="f-userid" type="text" placeholder="A1b2C3D4" oninput="ce('userid');this.value=this.value.toUpperCase()">
         <span class="err-msg">Requerido</span>
       </div>
       <div class="fg dpf" id="fg-fecha"><label>Fecha cargue <span class="rs">*</span></label><input id="f-fecha" type="date" onchange="ce('fecha')"><span class="err-msg">Requerido</span></div>
@@ -2310,34 +2307,33 @@ function openDet(id){
   const bldVal = r.bld+(r.bldCode?` <span style="font-family:var(--mono);font-size:.65rem;background:var(--paper-2);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-left:.3rem">${r.bldCode}</span>`:'');
 
   document.getElementById('detBody').innerHTML = [
-    sec('Identificación del equipo'),
-    row('Ticket',       r.ticket),
-    row('Serial',       r.serial),
-    row('Hostname',     r.hostname),
-    row('Placa',        r.placa),
-    row('IP',           r.ip),
-    sec('Hardware'),
-    row('Tipo',         r.tipo),
-    row('Marca',        r.marca),
-    row('Modelo',       r.modelo),
-    row('S.O',          r.so),
+    sec('Ticket'),
+    row('Ticket',          r.ticket),
+    row('Proyecto',        r.proyecto),
     sec('Organización'),
-    row('Estado',       r.estado),
-    row('Empresa',      r.empresa),
-    row('Ubicación',    r.ubicacion),
-    row('Proyecto',     r.proyecto),
-    sec('Usuario asignado'),
-    row('Usuario',      r.user),
-    row('UserID',       r.userid),
-    row('Fecha cargue', r.fecha),
+    row('Usuario',         r.user),
+    row('UserID',          r.userid),
+    row('Empresa',         r.empresa),
+    row('Ubicación',       r.ubicacion),
+    row('Fecha de cargue', r.fecha),
+    sec('Hardware'),
+    row('Estado',          r.estado),
+    row('Tipo',            r.tipo),
+    row('Marca',           r.marca),
+    row('Modelo',          r.modelo),
+    row('Serial',          r.serial),
+    row('Hostname',        r.hostname),
+    row('Placa',           r.placa),
+    row('S.O',             r.so),
+    row('IP',              r.ip),
     sec('Herramientas / Controles'),
-    row('CMDB',         ck(r.cmdb)),
-    row('Snow',         ck(r.snow)),
-    row('Symantec',     ck(r.symantec)),
-    row('Discovery',    ck(r.discovery)),
-    row('Crowdstrike',  ck(r.crowdstrike)),
-    row('Bitlocker C',  blcVal),
-    row('Bitlocker D',  bldVal),
+    row('CMDB',            ck(r.cmdb)),
+    row('Snow',            ck(r.snow)),
+    row('Symantec',        ck(r.symantec)),
+    row('Discovery',       ck(r.discovery)),
+    row('Crowdstrike',     ck(r.crowdstrike)),
+    row('Bitlocker C',     blcVal),
+    row('Bitlocker D',     bldVal),
     sec('Notas'),
     `<div style="font-size:.8rem;color:var(--ink-2);padding:.4rem 0;line-height:1.6;white-space:pre-wrap">${r.notas||'—'}</div>`,
   ].join('');
@@ -2350,38 +2346,37 @@ function openDet(id){
 function copyDetail(){
   const r=DB.find(x=>x.id===_detCurrentId);if(!r)return;
   const row=(label,val)=>`${label}: ${val||'—'}`;
-  const sep=(title)=>`\n── ${title.toUpperCase()} ${'─'.repeat(Math.max(2,42-title.length-3))}`;
+  const sep=(title)=>`\n── ${title} ${'─'.repeat(Math.max(2,46-title.length))}`;
   const lines=[
-    sep('Identificación del equipo'),
-    row('Ticket',         r.ticket),
-    row('Serial',         r.serial),
-    row('Hostname',       r.hostname),
-    row('Placa',          r.placa),
-    row('IP',             r.ip),
-    sep('Hardware'),
-    row('Tipo',           r.tipo),
-    row('Marca',          r.marca),
-    row('Modelo',         r.modelo),
-    row('S.O',            r.so),
+    sep('Ticket'),
+    row('Ticket',          r.ticket),
+    row('Proyecto',        r.proyecto),
     sep('Organización'),
-    row('Estado',         r.estado),
-    row('Empresa',        r.empresa),
-    row('Ubicación',      r.ubicacion),
-    row('Proyecto',       r.proyecto),
-    sep('Usuario asignado'),
-    row('Usuario',        r.user),
-    row('UserID',         r.userid),
-    row('Fecha cargue',   r.fecha),
+    row('Usuario',         r.user),
+    row('UserID',          r.userid),
+    row('Empresa',         r.empresa),
+    row('Ubicación',       r.ubicacion),
+    row('Fecha de cargue', r.fecha),
+    sep('Hardware'),
+    row('Estado',          r.estado),
+    row('Tipo',            r.tipo),
+    row('Marca',           r.marca),
+    row('Modelo',          r.modelo),
+    row('Serial',          r.serial),
+    row('Hostname',        r.hostname),
+    row('Placa',           r.placa),
+    row('S.O',             r.so),
+    row('IP',              r.ip),
     sep('Herramientas / Controles'),
-    row('CMDB',           r.cmdb),
-    row('Snow',           r.snow),
-    row('Symantec',       r.symantec),
-    row('Discovery',      r.discovery),
-    row('Crowdstrike',    r.crowdstrike),
-    row('Bitlocker C',    r.blc+(r.blcCode?' ['+r.blcCode+']':'')),
-    row('Bitlocker D',    r.bld+(r.bldCode?' ['+r.bldCode+']':'')),
+    row('CMDB',            r.cmdb),
+    row('Snow',            r.snow),
+    row('Symantec',        r.symantec),
+    row('Discovery',       r.discovery),
+    row('Crowdstrike',     r.crowdstrike),
+    row('Bitlocker C',     r.blc+(r.blcCode?' ['+r.blcCode+']':'')),
+    row('Bitlocker D',     r.bld+(r.bldCode?' ['+r.bldCode+']':'')),
     sep('Notas'),
-    r.notas ? `  ${r.notas}` : '  —',
+    row('Notas',           r.notas),
   ];
   const txt=lines.join('\n');
   if(navigator.clipboard){
